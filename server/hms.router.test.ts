@@ -43,7 +43,7 @@ import { ManagedAccountEmailConflictError } from "./db";
 
 function authenticatedContext(role: HmsRole): TrpcContext {
   return {
-    user: { id: 77, openId: `clinical-${role}`, email: "user@clinical.test", name: "Clinical User", loginMethod: "supabase", role, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
+    user: { id: 77, openId: `clinical-${role}`, email: "user@clinical.test", name: "Clinical User", loginMethod: "supabase", passwordHash: null, role, isActive: "yes", createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
     req: {} as TrpcContext["req"],
     res: {} as TrpcContext["res"],
   };
