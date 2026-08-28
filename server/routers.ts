@@ -82,7 +82,7 @@ export const appRouter = router({
     listStaff: roleProcedure("userRoleManage").query(() => db.listStaff()),
     updateStaffRole: roleProcedure("userRoleManage").input(z.object({ userId: z.number().int().positive(), role: hmsRole, clinicianId: z.number().int().positive().optional() })).mutation(({ input }) => db.updateStaffRole(input)),
     listManagedAccounts: roleProcedure("userCredentialManage").query(() => db.listManagedAccounts()),
-    createManagedAccount: roleProcedure("userCredentialManage").input(managedAccount.extend({ password: z.string().min(12).max(160) })).mutation(async ({ input }) => {
+    createManagedAccount: roleProcedure("userCredentialManage").input(managedAccount.extend({ password: z.string().min(6).max(160) })).mutation(async ({ input }) => {
       if (input.clinicianId && input.role !== "doctor") throw new TRPCError({ code: "BAD_REQUEST", message: "Only Doctor accounts can be linked to a clinician profile." });
       try {
         return await db.createManagedAccount(input);
@@ -96,7 +96,7 @@ export const appRouter = router({
       if (input.clinicianId && input.role !== "doctor") throw new TRPCError({ code: "BAD_REQUEST", message: "Only Doctor accounts can be linked to a clinician profile." });
       return db.updateManagedAccount(input);
     }),
-    resetManagedAccountPassword: roleProcedure("userCredentialManage").input(z.object({ userId: z.number().int().positive(), password: z.string().min(12).max(160) })).mutation(({ input }) => db.resetManagedAccountPassword(input.userId, input.password)),
+    resetManagedAccountPassword: roleProcedure("userCredentialManage").input(z.object({ userId: z.number().int().positive(), password: z.string().min(6).max(160) })).mutation(({ input }) => db.resetManagedAccountPassword(input.userId, input.password)),
     setManagedAccountActive: roleProcedure("userCredentialManage").input(z.object({ userId: z.number().int().positive(), isActive: z.enum(["yes", "no"]) })).mutation(({ input, ctx }) => {
       if (input.userId === ctx.user.id && input.isActive === "no") throw new TRPCError({ code: "FORBIDDEN", message: "Administrators cannot deactivate their own account." });
       return db.setManagedAccountActive(input.userId, input.isActive);

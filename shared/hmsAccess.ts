@@ -28,7 +28,7 @@ export const HMS_PERMISSIONS = {
 
 export type HmsPermission = keyof typeof HMS_PERMISSIONS;
 
-export type HmsPage = "Overview" | "Patients" | "Appointments" | "Clinical" | "Pharmacy & Lab" | "Billing" | "Archive" | "Reports";
+export type HmsPage = "Overview" | "Patients" | "Appointments" | "Clinical" | "Pharmacy & Lab" | "Billing" | "Archive" | "Reports" | "Staff & Roles";
 
 export const HMS_PAGE_PERMISSIONS: Partial<Record<HmsPage, HmsPermission>> = {
   Clinical: "medicalRecordRead",
@@ -36,6 +36,7 @@ export const HMS_PAGE_PERMISSIONS: Partial<Record<HmsPage, HmsPermission>> = {
   Billing: "billingRead",
   Archive: "archiveRead",
   Reports: "reportingRead",
+  "Staff & Roles": "userRoleManage",
 };
 
 export function hasHmsPermission(role: string | null | undefined, permission: HmsPermission) {
