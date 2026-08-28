@@ -18,32 +18,57 @@ const trpcMiddleware = createExpressMiddleware({
   createContext,
 });
 
-// Health check endpoint for Vercel
+// Health check — always responds, even when DB is not reachable
 app.get(["/api", "/api/health"], (_req: Request, res: Response) => {
+  const hasDatabaseUrl = !!(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL);
+  const hasJwtSecret   = !!process.env.JWT_SECRET;
   res.status(200).json({
-    status: "ok",
+    status : "ok",
     service: "clinical-ledger-api",
-    timestamp: new Date().toISOString(),
-    db: !!(process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL),
+    env    : { db: hasDatabaseUrl, jwt: hasJwtSecret },
+    ts     : new Date().toISOString(),
   });
 });
 
 // tRPC routes
 app.use("/api/trpc", trpcMiddleware);
-app.use("/trpc", trpcMiddleware);
+app.use("/trpc",     trpcMiddleware);
 
-// JSON error handler — must have 4 params for Express to recognize it as an error handler
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("[API Error]", err?.message || err);
-  if (!res.headersSent) {
-    res.status(err?.status || 500).json({
-      error: {
-        message: err?.message || "Internal server error",
-        code: err?.code || "INTERNAL_SERVER_ERROR",
-      },
-    });
-  }
+// ── JSON error handler ────────────────────────────────────────────────────────
+// 4-arg signature is required for Express to recognise this as an error handler.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  const e = err as { status?: number; message?: string; code?: string } | null;
+  console.error("[API Error]", e?.message ?? err);
+  if (res.headersSent) return;
+  res.status(e?.status ?? 500).json({
+    error: {
+      message: e?.message ?? "Internal server error",
+      code   : e?.code    ?? "INTERNAL_SERVER_ERROR",
+    },
+  });
 });
 
-// Export the Express app — esbuild will bundle this to api/index.js for Vercel
-export default app;
+// ── Vercel entry point ────────────────────────────────────────────────────────
+// Vercel calls the default export as (req, res) — Express apps implement this
+// interface directly, so exporting `app` is the correct pattern.
+//
+// We wrap it so that any synchronous top-level throw is caught and returned as
+// JSON instead of making Vercel emit its generic "A server error" HTML page.
+const handler = async (req: Request, res: Response) => {
+  try {
+    await new Promise<void>((resolve, reject) => {
+      app(req, res, (err?: unknown) => (err ? reject(err) : resolve()));
+    });
+  } catch (err) {
+    const e = err as { status?: number; message?: string } | null;
+    console.error("[Handler crash]", e?.message ?? err);
+    if (!res.headersSent) {
+      res.status(e?.status ?? 500).json({
+        error: { message: e?.message ?? "Internal server error" },
+      });
+    }
+  }
+};
+
+export default handler;
