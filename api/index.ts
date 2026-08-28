@@ -23,6 +23,11 @@ const trpcMiddleware = createExpressMiddleware({
   createContext,
 });
 
+// Health check endpoint for Vercel
+app.get(["/api", "/api/health"], (_req, res) => {
+  res.status(200).json({ status: "ok", service: "clinical-ledger-api", timestamp: new Date().toISOString() });
+});
+
 // Support both /api/trpc and /trpc
 app.use("/api/trpc", trpcMiddleware);
 app.use("/trpc", trpcMiddleware);
