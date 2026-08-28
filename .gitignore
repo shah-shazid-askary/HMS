@@ -6,6 +6,9 @@
 dist/
 build/
 *.dist
+# Generated Vercel function bundle (built by esbuild in build:vercel)
+api/index.js
+
 
 # Environment variables
 .env

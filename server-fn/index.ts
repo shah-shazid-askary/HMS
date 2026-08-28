@@ -45,5 +45,5 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   }
 });
 
-// Vercel expects the Express app as the default export
+// Export the Express app — esbuild will bundle this to api/index.js for Vercel
 export default app;
