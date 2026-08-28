@@ -1,14 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build:vercel",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/public",
-  "functions": {
-    "api/index.ts": {
-      "runtime": "nodejs22.x"
-    }
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/trpc/(.*)", "destination": "/api/index" },
     { "source": "/((?!api/|assets/|__manus__/).*)", "destination": "/index.html" }
   ]
 }
