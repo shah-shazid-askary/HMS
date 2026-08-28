@@ -30,7 +30,10 @@ export class SDKServer {
       return new Map();
     }
     const parsed = parseCookieHeader(cookieHeader);
-    return new Map(Object.entries(parsed));
+    const entries = Object.entries(parsed).filter(
+      (e): e is [string, string] => e[1] !== undefined
+    );
+    return new Map(entries);
   }
 
   /**
