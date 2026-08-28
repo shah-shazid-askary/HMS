@@ -37,7 +37,7 @@ export async function getDb() {
   const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
   if (!_db && connectionString) {
     _client = postgres(connectionString, {
-      max: process.env.NODE_ENV === "production" ? 1 : 5,
+      max: 5,
       prepare: false,
       fetch_types: false,
       idle_timeout: 20,
