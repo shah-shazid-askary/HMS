@@ -3,7 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { clearHmsSessionCache } from "@/lib/sessionCache";
 import { useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, KeyRound, Loader2, ShieldCheck, Stethoscope, UserCog, UserCheck } from "lucide-react";
+import { CalendarDays, KeyRound, Loader2, ShieldCheck } from "lucide-react";
 
 function CredentialSignIn() {
   const utils = trpc.useUtils();
@@ -11,7 +11,7 @@ function CredentialSignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const login = trpc.auth.demoLogin.useMutation({
+  const login = trpc.auth.login.useMutation({
     onSuccess: async (data: any) => {
       if (data?.token) {
         try {
@@ -29,96 +29,52 @@ function CredentialSignIn() {
     login.mutate({ email, password });
   };
 
-  const fillRole = (role: "admin" | "doctor" | "receptionist") => {
-    const roleMap = {
-      admin: { email: "admin@clinicalledger.demo", pass: "HospitalCare2026!" },
-      doctor: { email: "doctor@clinicalledger.demo", pass: "HospitalCare2026!" },
-      receptionist: { email: "reception@clinicalledger.demo", pass: "HospitalCare2026!" },
-    };
-    setEmail(roleMap[role].email);
-    setPassword(roleMap[role].pass);
-  };
-
   return (
-    <div className="mt-7 space-y-5">
-      <div className="rounded-xl border border-[#e2ece9] bg-[#f7faf9] p-3">
-        <p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#007c83]">
-          Quick Role Presets
+    <form onSubmit={submit} className="mt-7 space-y-4">
+      <label className="block">
+        <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#637381]">
+          Work email
+        </span>
+        <input
+          required
+          autoComplete="username"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="name@hospital.example"
+          className="mt-2 h-11 w-full rounded-xl border border-[#dfe7e1] bg-white px-3 text-sm font-semibold text-[#193448] outline-none transition focus:border-[#007c83] focus:ring-2 focus:ring-[#b9e3e4]"
+        />
+      </label>
+
+      <label className="block">
+        <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#637381]">
+          Password
+        </span>
+        <input
+          required
+          autoComplete="current-password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Enter your password"
+          className="mt-2 h-11 w-full rounded-xl border border-[#dfe7e1] bg-white px-3 text-sm font-semibold text-[#193448] outline-none transition focus:border-[#007c83] focus:ring-2 focus:ring-[#b9e3e4]"
+        />
+      </label>
+
+      {login.error && (
+        <p role="alert" className="rounded-xl bg-[#fff0ee] px-3 py-2 text-xs font-bold text-[#ae493d]">
+          {login.error.message}
         </p>
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => fillRole("admin")}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#d8e6e3] bg-white py-2 px-2 text-xs font-bold text-[#193448] hover:border-[#007c83] hover:text-[#007c83] transition"
-          >
-            <UserCog className="h-3.5 w-3.5" />
-            Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => fillRole("doctor")}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#d8e6e3] bg-white py-2 px-2 text-xs font-bold text-[#193448] hover:border-[#007c83] hover:text-[#007c83] transition"
-          >
-            <Stethoscope className="h-3.5 w-3.5" />
-            Doctor
-          </button>
-          <button
-            type="button"
-            onClick={() => fillRole("receptionist")}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#d8e6e3] bg-white py-2 px-2 text-xs font-bold text-[#193448] hover:border-[#007c83] hover:text-[#007c83] transition"
-          >
-            <UserCheck className="h-3.5 w-3.5" />
-            Reception
-          </button>
-        </div>
-      </div>
+      )}
 
-      <form onSubmit={submit} className="space-y-4">
-        <label className="block">
-          <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#637381]">
-            Work email
-          </span>
-          <input
-            required
-            autoComplete="username"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="name@hospital.example"
-            className="mt-2 h-11 w-full rounded-xl border border-[#dfe7e1] bg-white px-3 text-sm font-semibold text-[#193448] outline-none transition focus:border-[#007c83] focus:ring-2 focus:ring-[#b9e3e4]"
-          />
-        </label>
-
-        <label className="block">
-          <span className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#637381]">
-            Password
-          </span>
-          <input
-            required
-            autoComplete="current-password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter your password"
-            className="mt-2 h-11 w-full rounded-xl border border-[#dfe7e1] bg-white px-3 text-sm font-semibold text-[#193448] outline-none transition focus:border-[#007c83] focus:ring-2 focus:ring-[#b9e3e4]"
-          />
-        </label>
-
-        {login.error && (
-          <p role="alert" className="rounded-xl bg-[#fff0ee] px-3 py-2 text-xs font-bold text-[#ae493d]">
-            {login.error.message}
-          </p>
-        )}
-
-        <button
-          disabled={login.isPending}
-          type="submit"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#007c83] px-5 py-3.5 text-sm font-extrabold text-white transition-transform duration-150 active:scale-[.97] disabled:opacity-60 shadow-md hover:bg-[#006f75]"
-        >
-          {login.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-          {login.isPending ? "Signing in..." : "Sign in securely"}
-        </button>
-      </form>
-    </div>
+      <button
+        disabled={login.isPending}
+        type="submit"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#007c83] px-5 py-3.5 text-sm font-extrabold text-white transition-transform duration-150 active:scale-[.97] disabled:opacity-60 shadow-md hover:bg-[#006f75]"
+      >
+        {login.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+        {login.isPending ? "Signing in..." : "Sign in securely"}
+      </button>
+    </form>
   );
 }
 
@@ -151,14 +107,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Hospital Management System
           </h1>
           <p className="mt-5 max-w-md text-[15px] leading-7 text-[#526576]">
-            Sign in with your role-secured credentials. Clinical notes, appointments, billing desk, and pharmacy are guarded by Supabase database access.
+            Sign in with your credentials to access the clinical workspace.
           </p>
 
           <CredentialSignIn />
 
           <div className="mt-7 flex items-center gap-3 border-t border-[#e9efea] pt-5 text-xs text-[#82909a]">
             <CalendarDays className="h-4 w-4 text-[#007c83]" />
-            Persistent PostgreSQL Database (Supabase) · Role-Based Access Control
+            Supabase PostgreSQL · Role-Based Access Control
           </div>
         </section>
       </main>

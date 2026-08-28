@@ -27,11 +27,7 @@ type Gender = "Female" | "Male" | "Other" | "Not specified";
 type AppointmentStatus = "Scheduled" | "Checked in" | "Completed" | "Cancelled";
 type PaymentMethod = "Cash" | "Card" | "Mobile banking" | "Insurance";
 
-const DEMO_ACCOUNTS = [
-  { openId: "demo_hms_admin", email: "admin@clinicalledger.demo", name: "Amelia Rahman", role: "admin" as const, passwordHash: "73a5b98a3b9297374a8c141ace206e9e:db040ccf69e944325b6b0c5bf85b3ec4c0a4acc27560a40687d2cda16b64aa3bfbd20a0ce5fbe9d187eac4d88b7e4b3d346c539085fa0991b0f2db1807527306" },
-  { openId: "demo_hms_doctor", email: "doctor@clinicalledger.demo", name: "Dr. Samira Ahmed", role: "doctor" as const, passwordHash: "8aa44b54d3e5c66062947db3a2830fe2:926e375cec3aa559a0fb4ce6028fffacd678f62f31a8c3018025fb13087509fb2c819d3d05c8b0ffd8437c8824c229d46422f075de263f359ee46d015cef4c41" },
-  { openId: "demo_hms_reception", email: "reception@clinicalledger.demo", name: "Nusrat Jahan", role: "receptionist" as const, passwordHash: "dc8c723d22173b3394c792b7f4362998:575d153b4cd069a669b8df4719fe9a93984b013e81d5e804c25e4469642649bebffa9fbd47fc470405b3cf525ca9e3de3f5e4350e39145daf7e6be277940c91d" },
-];
+
 
 export async function getDb() {
   const connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
@@ -101,28 +97,12 @@ function managedAccountResponse(user: { id: number; name: string | null; email: 
   return { id: user.id, name: user.name, email: user.email, role: user.role, isActive: user.isActive, loginMethod: user.loginMethod, lastSignedIn: user.lastSignedIn };
 }
 
-export async function ensureDemoCredentialAccounts() {
-  await ensureHmsSeed();
-  const db = await getDb();
-  if (!db) throw new Error("Database is unavailable");
-  for (const account of DEMO_ACCOUNTS) {
-    await db.insert(users).values({ openId: account.openId, email: account.email, name: account.name, loginMethod: "credential-demo", passwordHash: account.passwordHash, role: account.role, isActive: "yes", lastSignedIn: new Date() }).onConflictDoUpdate({ target: users.openId, set: { email: account.email, name: account.name, loginMethod: "credential-demo" } });
-  }
-  const doctor = (await db.select().from(users).where(eq(users.openId, "demo_hms_doctor")).limit(1))[0];
-  const clinician = (await db.select().from(clinicians).where(eq(clinicians.fullName, "Dr. Samira Ahmed")).limit(1))[0];
-  if (doctor && clinician && clinician.userId !== doctor.id) await db.update(clinicians).set({ userId: doctor.id }).where(eq(clinicians.id, clinician.id));
-}
-
-export async function authenticateDemoCredentials(email: string, password: string) {
-  await ensureDemoCredentialAccounts();
+export async function authenticateUser(email: string, password: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is unavailable");
   const user = (await db.select().from(users).where(eq(users.email, email.trim().toLowerCase())).limit(1))[0];
   if (!user || user.isActive !== "yes") return undefined;
-  const isDemoAccount = user.openId.startsWith("demo_");
-  const isValidDemoPass = isDemoAccount && (password === "HospitalCare2026!" || password === "demo123" || password === "admin123" || password === "password" || password === "HospitalCare2024!");
-  const isHashValid = user.passwordHash ? verifyPassword(password, user.passwordHash) : false;
-  if (!isValidDemoPass && !isHashValid) return undefined;
+  if (!user.passwordHash || !verifyPassword(password, user.passwordHash)) return undefined;
   await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
   return (await db.select().from(users).where(eq(users.id, user.id)).limit(1))[0];
 }

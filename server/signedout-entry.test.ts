@@ -12,7 +12,7 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/lib/trpc", () => ({
   trpc: {
     useUtils: () => ({ auth: { me: { invalidate: vi.fn() } } }),
-    auth: { demoLogin: { useMutation: () => ({ mutate: vi.fn(), isPending: false, error: null }) } },
+    auth: { login: { useMutation: () => ({ mutate: vi.fn(), isPending: false, error: null }) } },
   },
 }));
 
