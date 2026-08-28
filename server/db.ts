@@ -501,6 +501,45 @@ export async function recordLaboratoryResult(input: { laboratoryOrderId: number;
   return { success: true } as const;
 }
 
+export async function updateLaboratoryOrder(input: { orderId: number; testName: string; priority: "Routine" | "Urgent"; status?: "Ordered" | "Collected" | "Resulted" | "Cancelled"; clinicalQuestion?: string; clinicianId?: number }) {
+  const db = await getDb(); if (!db) throw new Error("Database is unavailable");
+  const updateData: Record<string, unknown> = { testName: input.testName.trim(), priority: input.priority, clinicalQuestion: input.clinicalQuestion?.trim() || null };
+  if (input.status) updateData.status = input.status;
+  if (input.clinicianId) updateData.orderingClinicianId = input.clinicianId;
+  await db.update(laboratoryOrders).set(updateData).where(eq(laboratoryOrders.id, input.orderId));
+  return { success: true } as const;
+}
+
+export async function deleteLaboratoryOrder(orderId: number) {
+  const db = await getDb(); if (!db) throw new Error("Database is unavailable");
+  await db.delete(laboratoryOrders).where(eq(laboratoryOrders.id, orderId));
+  return { success: true } as const;
+}
+
+export async function updateLaboratoryResult(input: { resultId: number; resultSummary: string; resultValue?: string; referenceRange?: string; clinicianId?: number }) {
+  const db = await getDb(); if (!db) throw new Error("Database is unavailable");
+  const updateData: Record<string, unknown> = { resultSummary: input.resultSummary.trim(), resultValue: input.resultValue?.trim() || null, referenceRange: input.referenceRange?.trim() || null };
+  if (input.clinicianId) updateData.reportedByClinicianId = input.clinicianId;
+  await db.update(laboratoryResults).set(updateData).where(eq(laboratoryResults.id, input.resultId));
+  return { success: true } as const;
+}
+
+export async function deleteLaboratoryResult(resultId: number, orderId?: number) {
+  const db = await getDb(); if (!db) throw new Error("Database is unavailable");
+  await db.transaction(async (tx) => {
+    let targetOrderId = orderId;
+    if (!targetOrderId) {
+      const [resRow] = await tx.select().from(laboratoryResults).where(eq(laboratoryResults.id, resultId)).limit(1);
+      if (resRow) targetOrderId = resRow.laboratoryOrderId;
+    }
+    await tx.delete(laboratoryResults).where(eq(laboratoryResults.id, resultId));
+    if (targetOrderId) {
+      await tx.update(laboratoryOrders).set({ status: "Ordered" }).where(eq(laboratoryOrders.id, targetOrderId));
+    }
+  });
+  return { success: true } as const;
+}
+
 export async function listStaff() {
   return listManagedAccounts();
 }
