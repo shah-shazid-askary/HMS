@@ -92,39 +92,37 @@ export class SDKServer {
    * Resolves the user from the Supabase PostgreSQL database.
    */
   async authenticateRequest(req: Request): Promise<AuthenticatedUser | null> {
-    // 1. Check session cookie
-    const cookies = this.parseCookies(req.headers.cookie);
-    let sessionToken = cookies.get(COOKIE_NAME);
-
-    // 2. Check Bearer Authorization header
-    if (!sessionToken) {
-      const authHeader = req.headers.authorization;
-      if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
-        sessionToken = authHeader.slice(7);
+    // 1. Try Bearer Authorization header first
+    const authHeader = req.headers.authorization;
+    if (typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.slice(7).trim();
+      if (token) {
+        const session = await this.verifySession(token);
+        if (session) {
+          const user = await db.getUserByOpenId(session.openId);
+          if (user && user.isActive === "yes") {
+            await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+            return user;
+          }
+        }
       }
     }
 
-    if (!sessionToken) {
-      return null;
+    // 2. Try session cookie
+    const cookies = this.parseCookies(req.headers.cookie);
+    const cookieToken = cookies.get(COOKIE_NAME);
+    if (cookieToken) {
+      const session = await this.verifySession(cookieToken);
+      if (session) {
+        const user = await db.getUserByOpenId(session.openId);
+        if (user && user.isActive === "yes") {
+          await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+          return user;
+        }
+      }
     }
 
-    const session = await this.verifySession(sessionToken);
-    if (!session) {
-      return null;
-    }
-
-    const user = await db.getUserByOpenId(session.openId);
-    if (!user || user.isActive !== "yes") {
-      return null;
-    }
-
-    // Update last signed in timestamp periodically
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: new Date(),
-    });
-
-    return user;
+    return null;
   }
 }
 
