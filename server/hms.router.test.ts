@@ -23,7 +23,7 @@ vi.mock("./db", () => ({
       super("An account with this email already exists.");
     }
   },
-  createManagedAccount: vi.fn(async (input) => ({ id: 301, name: input.name, email: input.email, role: input.role, isActive: "yes", loginMethod: "credential-demo", lastSignedIn: new Date() })),
+  createManagedAccount: vi.fn(async (input) => ({ id: 301, name: input.name, email: input.email, role: input.role, isActive: "yes", loginMethod: "supabase", lastSignedIn: new Date() })),
   updateManagedAccount: vi.fn(async () => ({ success: true })),
   resetManagedAccountPassword: vi.fn(async () => ({ success: true })),
   setManagedAccountActive: vi.fn(async () => ({ success: true })),
@@ -43,7 +43,7 @@ import { ManagedAccountEmailConflictError } from "./db";
 
 function authenticatedContext(role: HmsRole): TrpcContext {
   return {
-    user: { id: 77, openId: `clinical-${role}`, email: "user@clinical.test", name: "Clinical User", loginMethod: "manus", role, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
+    user: { id: 77, openId: `clinical-${role}`, email: "user@clinical.test", name: "Clinical User", loginMethod: "supabase", role, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() },
     req: {} as TrpcContext["req"],
     res: {} as TrpcContext["res"],
   };

@@ -126,7 +126,7 @@ export async function createManagedAccount(input: { name: string; email: string;
   const openId = `managed_${randomBytes(16).toString("hex")}`;
   try {
     await db.transaction(async (tx) => {
-      await tx.insert(users).values({ openId, name: input.name.trim(), email, loginMethod: "credential-demo", passwordHash: hashPassword(input.password), role: input.role, isActive: "yes", lastSignedIn: new Date() });
+      await tx.insert(users).values({ openId, name: input.name.trim(), email, loginMethod: "supabase", passwordHash: hashPassword(input.password), role: input.role, isActive: "yes", lastSignedIn: new Date() });
       const account = (await tx.select().from(users).where(eq(users.openId, openId)).limit(1))[0]!;
       if (input.clinicianId) await tx.update(clinicians).set({ userId: account.id }).where(eq(clinicians.id, input.clinicianId));
     });
@@ -154,7 +154,7 @@ export async function updateManagedAccount(input: { userId: number; name: string
 export async function resetManagedAccountPassword(userId: number, password: string) {
   const db = await getDb();
   if (!db) throw new Error("Database is unavailable");
-  await db.update(users).set({ passwordHash: hashPassword(password), loginMethod: "credential-demo" }).where(eq(users.id, userId));
+  await db.update(users).set({ passwordHash: hashPassword(password), loginMethod: "supabase" }).where(eq(users.id, userId));
   return { success: true } as const;
 }
 
