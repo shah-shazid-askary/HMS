@@ -1,9 +1,8 @@
-import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { clearHmsSessionCache } from "@/lib/sessionCache";
 import { useQueryClient } from "@tanstack/react-query";
 import { TRPCClientError } from "@trpc/client";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -11,7 +10,7 @@ type UseAuthOptions = {
 };
 
 export function useAuth(options?: UseAuthOptions) {
-  const { redirectOnUnauthenticated = false, redirectPath } = options ?? {};
+  const { redirectPath } = options ?? {};
   const utils = trpc.useUtils();
   const queryClient = useQueryClient();
 
@@ -39,20 +38,26 @@ export function useAuth(options?: UseAuthOptions) {
       throw error;
     } finally {
       try {
-        sessionStorage.removeItem("manus-cookie");
+        localStorage.removeItem("hms-auth-token");
+        sessionStorage.removeItem("hms-auth-token");
+        localStorage.removeItem("hms-user-session");
       } catch {}
       await clearHmsSessionCache(queryClient);
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      if (redirectPath) {
+        window.location.href = redirectPath;
+      }
     }
-  }, [logoutMutation, queryClient, utils]);
+  }, [logoutMutation, queryClient, redirectPath, utils]);
 
   const state = useMemo(() => {
     try {
-      localStorage.setItem(
-        "manus-runtime-user-info",
-        JSON.stringify(meQuery.data)
-      );
+      if (meQuery.data) {
+        localStorage.setItem("hms-user-session", JSON.stringify(meQuery.data));
+      } else {
+        localStorage.removeItem("hms-user-session");
+      }
     } catch {}
     return {
       user: meQuery.data ?? null,
@@ -66,26 +71,6 @@ export function useAuth(options?: UseAuthOptions) {
     meQuery.isLoading,
     logoutMutation.error,
     logoutMutation.isPending,
-  ]);
-
-  useEffect(() => {
-    if (!redirectOnUnauthenticated) return;
-    if (meQuery.isLoading || logoutMutation.isPending) return;
-    if (state.user) return;
-    if (typeof window === "undefined") return;
-    if (redirectPath && window.location.pathname === redirectPath) return;
-
-    if (redirectPath) {
-      window.location.href = redirectPath;
-    } else {
-      startLogin();
-    }
-  }, [
-    redirectOnUnauthenticated,
-    redirectPath,
-    logoutMutation.isPending,
-    meQuery.isLoading,
-    state.user,
   ]);
 
   return {

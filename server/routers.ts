@@ -40,12 +40,19 @@ export const appRouter = router({
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(({ ctx }) => sessionUserResponse(ctx.user)),
-    demoLogin: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(8).max(160) })).mutation(async ({ input, ctx }) => {
+    login: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(1).max(160) })).mutation(async ({ input, ctx }) => {
       const user = await db.authenticateDemoCredentials(input.email, input.password);
       if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password." });
       const token = await sdk.createSessionToken(user.openId, { name: user.name || "Clinical Ledger user" });
       ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
-      return { id: user.id, name: user.name, email: user.email, role: user.role };
+      return { id: user.id, name: user.name, email: user.email, role: user.role, token };
+    }),
+    demoLogin: publicProcedure.input(z.object({ email: z.string().email().max(320), password: z.string().min(1).max(160) })).mutation(async ({ input, ctx }) => {
+      const user = await db.authenticateDemoCredentials(input.email, input.password);
+      if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid email or password." });
+      const token = await sdk.createSessionToken(user.openId, { name: user.name || "Clinical Ledger user" });
+      ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: ONE_YEAR_MS });
+      return { id: user.id, name: user.name, email: user.email, role: user.role, token };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);

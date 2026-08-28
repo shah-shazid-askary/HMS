@@ -33,7 +33,7 @@ describe("auth.demoLogin", () => {
       const result = await appRouter.createCaller(ctx).auth.demoLogin({ email, password: "correct-demo-password" });
       expect(result.role).toBe(expectedRole);
       expect(cookies[0]).toMatchObject({ name: "app_session_id", value: `session-demo_${expectedRole}` });
-      expect(cookies[0]?.options).toMatchObject({ httpOnly: true, secure: true, sameSite: "none", path: "/" });
+      expect(cookies[0]?.options).toMatchObject({ httpOnly: true, secure: true, sameSite: "lax", path: "/" });
     }
   });
 

@@ -14,7 +14,7 @@ import { ArchiveRestore, Bell, Building2, CalendarDays, Check, ChevronDown, Circ
 type Page = "Overview" | "Patients" | "Appointments" | "Clinical" | "Pharmacy & Lab" | "Billing" | "Archive" | "Reports";
 type NavItem = { label: Page; icon: typeof LayoutDashboard; permission?: HmsPermission };
 
-const logoUrl = "/manus-storage/hms-clinical-ledger-mark_3ff4fdf4.png";
+const logoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23007C83'/%3E%3Cpath d='M42 22h16v20h20v16H58v20H42V58H22V42h20z' fill='white'/%3E%3C/svg%3E";
 const isPage = (value: string | null): value is Page => ["Overview", "Patients", "Appointments", "Clinical", "Pharmacy & Lab", "Billing", "Archive", "Reports"].includes(value ?? "");
 const navItems: NavItem[] = [
   { label: "Overview", icon: LayoutDashboard }, { label: "Patients", icon: UsersRound }, { label: "Appointments", icon: CalendarDays },
