@@ -40,10 +40,12 @@ export const HMS_PAGE_PERMISSIONS: Partial<Record<HmsPage, HmsPermission>> = {
 };
 
 export function hasHmsPermission(role: string | null | undefined, permission: HmsPermission) {
+  if (role === "admin") return true;
   return (HMS_PERMISSIONS[permission] as readonly string[]).includes(role ?? "");
 }
 
 export function canAccessHmsPage(role: string | null | undefined, page: HmsPage) {
+  if (role === "admin") return true;
   const permission = HMS_PAGE_PERMISSIONS[page];
   return !permission || hasHmsPermission(role, permission);
 }
