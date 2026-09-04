@@ -95,4 +95,4 @@ Vercel will use [`vercel.json`](./vercel.json) to build the frontend with `pnpm 
 - `pnpm build`: Full build (client bundle + server bundle)
 - `pnpm build:vercel`: Client bundle build for Vercel deployment
 - `pnpm test`: Run Vitest test suite
-- `pnpm check`: TypeScript type checks
+- `pnpm check`: TypeScript type checks 
